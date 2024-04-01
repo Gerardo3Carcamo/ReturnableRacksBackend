@@ -1,10 +1,25 @@
-﻿using ReturnableRacksBackend.Services;
+﻿using ReturnableRacksBackend.Controllers.ReturnableRacks.Models;
+using ReturnableRacksBackend.Services;
 using System.Data;
+using System.Linq;
 using static ReturnableRacksBackend.Controllers.ReturnableRacks.Models.ReturnableRacksModels;
 namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
 {
     public class ReturnableRacksMethods
     {
+        public static Models.ReturnableRacksModels.HttpResponse DoLogin(Models.ReturnableRacksModels.Operadores data)
+        {
+            string query = $"SELECT TOKEN, ROLE_ID, AREA_ID, ID AS OPERADOR_ID FROM RR_OPERADORES WHERE [NAME] = '{data.OPERADOR_NAME}' AND [PASSWORD] = '{data.PASSWORD}'";
+            List< Operadores> operador = SQLService.SelectMethod<Operadores>(query);
+            if (operador.Count() > 0)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(operador.FirstOrDefault(), $"Bienvenido de nuevo {data.OPERADOR_NAME}", false, "Login");
+            }
+            else
+            {
+                return new ReturnableRacksModels.HttpResponse(new { }, "Credenciales invalidas", true, "Login");
+            }
+        }
         public static Models.ReturnableRacksModels.HttpResponse AddRoles(Roles data)
         {
             string query = $@"Insert into RR_ROLES VALUES (@ROLE_NAME)";
@@ -186,7 +201,10 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
 
         public static Models.ReturnableRacksModels.HttpResponse GetAllRacks()
         {
-            string query = $@"SELECT ID AS RACK_ID, * FROM RR_RACKS";
+            string query = $@"SELECT R.ID AS RACK_ID, R.RACK_NAME, V.ID AS VENDOR_ID, 
+                                V.VENDOR_CODE FROM RR_RACKS AS R
+                                inner join RR_VENDORS AS V
+                                ON R.VENDOR_ID = V.ID";
             List<Racks> list = SQLService.SelectMethod<Racks>(query);
             return new Models.ReturnableRacksModels.HttpResponse(list, "Ok", false, "GetAllRacks");
         }
@@ -306,6 +324,72 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
             catch (Exception ex)
             {
                 return new Models.ReturnableRacksModels.HttpResponse(null, ex.Message, true, "DeleteOperador");
+            }
+        }
+
+        public static Models.ReturnableRacksModels.HttpResponse GetRacksByVendor(Vendors data)
+        {
+            try
+            {
+                string query = $@"select R.RACK_NAME, R.ID AS RACK_ID FROM RR_RACKS AS R
+                                    INNER JOIN RR_VENDORS AS V ON V.ID = R.VENDOR_ID
+                                    WHERE R.VENDOR_ID = {data.VENDOR_ID}";
+                List<Racks> list = SQLService.SelectMethod<Racks>(query);
+                return new Models.ReturnableRacksModels.HttpResponse(list, "Ok", false, "GetRacksByVendor");
+            }
+            catch (Exception ex)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "GetRacksByVendor");
+            }
+        }
+        public static Models.ReturnableRacksModels.HttpResponse SaveReport(Inspecciones data)
+        {
+            try
+            {
+                string query = $@"INSERT INTO [dbo].[RR_INSPECTIONS]
+                                   ([FOLIO]
+                                   ,[SELLO1]
+                                   ,[SELLO2]
+                                   ,[ENTRY_CUBE]
+                                   ,[LEAVE_CUBE]
+                                   ,[TS_LOAD]
+                                   ,[CARRIER_ID]
+                                   ,[OPERADOR_ID]
+                                   ,[VENDOR_ID]
+                                   ,[RAMPA_ID]
+                                   ,[MOVEMENT_TYPE]
+                                   ,[EXIT_TYPE])
+                                    VALUES(@FOLIO, @SELLO1, @SELLO2, @ENTRY_CUBE, 
+                                    @LEAVE_CUBE, @TS_LOAD, @CARRIER_CODE, @OPERADOR_ID,
+                                    @VENDOR_ID, @RAMPA_ID, @MOVEMENT_TYPE, @EXIT_TYPE)";
+                Dictionary<string, object> param = new Dictionary<string, object>();
+                param.Add("FOLIO", data.FOLIO);
+                param.Add("SELLO1", data.SELLO1);
+                param.Add("SELLO2", data.SELLO2);
+                param.Add("ENTRY_CUBE", data.ENTRY_CUBE);
+                param.Add("LEAVE_CUBE", data.LEAVE_CUBE);
+                param.Add("TS_LOAD", DateTime.Now);
+                param.Add("CARRIER_CODE", data.CARRIER_ID);
+                param.Add("OPERADOR_ID", data.OPERADOR_ID);
+                param.Add("VENDOR_ID", data.VENDOR_ID);
+                param.Add("RAMPA_ID", data.RAMPA_ID);
+                param.Add("MOVEMENT_TYPE", data.MOVEMENT_TYPE);
+                param.Add("EXIT_TYPE", data.EXIT_TYPE);
+                var id = SQLService.InsertMethod(query, param); 
+                data.RACKS.ForEach(x =>
+                {
+                    Dictionary<string, object> param2 = new();
+                    string query2 = $@"INSERT INTO [ReturnableRacks].[dbo].[RR_RACKS_INSPECTIONS]
+                                        VALUES(@INSPECTION_ID, @RACK_ID)";
+                    param2.Add("INSPECTION_ID", id);
+                    param2.Add("RACK_ID", x?.RACK_ID);
+                    SQLService.InsertMethod(query2, param2);
+                });
+                return new Models.ReturnableRacksModels.HttpResponse(true, "Ok", false, "GetRacksByVendor");
+            }
+            catch (Exception)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "SaveReport");
             }
         }
     }

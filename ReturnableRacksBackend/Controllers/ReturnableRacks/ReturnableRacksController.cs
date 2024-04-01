@@ -361,6 +361,40 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks
                 return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetAllOperadores"));
             }
         }
-
+        [HttpPost]
+        public ActionResult Login(Operadores data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.DoLogin (data));
+            }
+            catch (Exception e)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, e.Message, true, "Login"));
+            }
+        }
+        [HttpPost]
+        public ActionResult GetRacksByVendor(Vendors data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetRacksByVendor(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetRacksByVendor"));
+            }
+        }
+        [HttpPost]
+        public ActionResult SaveReport(Inspecciones data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.SaveReport(data));
+            }catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "SaveReport"));
+            }
+        }
     }
 }

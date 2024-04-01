@@ -10,7 +10,7 @@
             public bool error { get; set; } = false;
             public string? apiName { get; set; } = "";
             public HttpResponse(){}
-            public HttpResponse(object data, string message, bool error, string apiName)
+            public HttpResponse(object? data, string message, bool error, string apiName)
             {
                 this.data = data;
                 this.message = message;
@@ -51,6 +51,7 @@
             public int RACK_ID { get; set; }
             public string? RACK_NAME { get; set; }
             public int VENDOR_ID { get; set; }
+            public string? VENDOR_CODE { get; set; }
         }
         public class Carriers
         {
@@ -67,6 +68,31 @@
             public int AREA_ID { get; set; }
             public string? AREA_CODE { get; set; }
             public string? ROLE_NAME { get; set; }
+            public string? TOKEN { get; set; }
+            public string? PASSWORD { get; set; }
+        }
+        public class Inspecciones
+        {
+            public int ID { get; set; }
+            public string? FOLIO { get; set; }
+            public string? SELLO1 { get; set; }
+            public string? SELLO2 { get; set; }
+            public int ENTRY_CUBE {  get; set; }
+            public int LEAVE_CUBE { get; set; }
+            public int CARRIER_ID {  get; set; }
+            public string? OPERADOR_ID { get; set; }
+            public int VENDOR_ID {  get; set; }
+            public int RAMPA_ID { get; set; }
+            public string? MOVEMENT_TYPE { get; set; }
+            public string? EXIT_TYPE {  get; set; }
+            public List<RacksCargados?>? RACKS {  get; set; }
+        }
+        public class RacksCargados
+        {
+            public int ID { get; set; }
+            public int RACK_ID { get; set; }
+            public string? RACK_NAME { get; set; }
+            public int COUNT { get; set; }
         }
     }
 }

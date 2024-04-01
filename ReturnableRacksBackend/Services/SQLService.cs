@@ -7,7 +7,8 @@ namespace ReturnableRacksBackend.Services
 {
     public class SQLService
     {
-        public static List<T> SelectMethod<T>(string qry, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false, Dictionary<string, object?>? param = null)
+        static readonly string path = "Server=NITRO-5\\SQLEXPRESS;Database=NombreBaseDeDatos;Integrated Security=True;";
+        public static List<T> SelectMethod<T>(string qry, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false, Dictionary<string, object?>? param = null)
         {
             List<T> datalist = new List<T>(); 
             var cs = connectionString;
@@ -40,7 +41,7 @@ namespace ReturnableRacksBackend.Services
             }
 
         }
-        public static List<dynamic> SelectMethod(string qry, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false, Dictionary<string, object?>? param = null)
+        public static List<dynamic> SelectMethod(string qry, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false, Dictionary<string, object?>? param = null)
         {
             List<dynamic> datalist = new List<dynamic>(); 
             var cs = connectionString;
@@ -74,7 +75,7 @@ namespace ReturnableRacksBackend.Services
 
         }
 
-        public static int InsertMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static int InsertMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         {
             try
             {
@@ -114,7 +115,7 @@ namespace ReturnableRacksBackend.Services
             }
         }
 
-        public static int UpdateMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static int UpdateMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         {
             try
             { 
@@ -151,7 +152,7 @@ namespace ReturnableRacksBackend.Services
             }
         }
 
-        public static int DeleteMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static int DeleteMethod(string query, Dictionary<string, object?>? param = null, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         {
             try
             { 
@@ -244,7 +245,7 @@ namespace ReturnableRacksBackend.Services
             }
         }
 
-        public static bool BulkCopy(DataTable data, string table, List<SqlBulkCopyColumnMapping>? mapping = null, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static bool BulkCopy(DataTable data, string table, List<SqlBulkCopyColumnMapping>? mapping = null, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         { 
             var cs = connectionString;
             using (SqlConnection cnx = new SqlConnection(cs))
@@ -310,7 +311,7 @@ namespace ReturnableRacksBackend.Services
             }
         }
 
-        public static T GetScalar<T>(string qry, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static T GetScalar<T>(string qry, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         { 
             var cs = connectionString;
 
@@ -346,7 +347,7 @@ namespace ReturnableRacksBackend.Services
             }
         }
 
-        public static int GetNonQuery(string qry, string? connectionString = "Server=tcp:racksdb.database.windows.net,1433;Initial Catalog=ReturnableRacks;Persist Security Info=False;User ID=GerardoAdmin;Password=Grcc521090.;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;", bool production = false)
+        public static int GetNonQuery(string qry, string? connectionString = "Server=NITRO-5\\SQLEXPRESS;Database=ReturnableRacks;Integrated Security=True;", bool production = false)
         { 
             var cs = connectionString;
             using (var cnx = new SqlConnection(cs))

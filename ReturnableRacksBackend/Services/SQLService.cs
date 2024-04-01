@@ -372,10 +372,5 @@ namespace ReturnableRacksBackend.Services
                 }
             }
         }
-
-        internal static List<T> SelectMethod<T>(string query, object value)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -392,5 +392,48 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
                 return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "SaveReport");
             }
         }
+
+        public static ReturnableRacksModels.HttpResponse GetInspectionsByInspector(DatesFilter data)
+        {
+            try
+            {
+                object result = new();
+                string query = $@"select COUNT(I.ID) AS TOTAL, V.VENDOR_CODE AS [DATA], O.[NAME] AS LABELS
+                                    from RR_INSPECTIONS AS I
+                                    INNER JOIN RR_CARRIERS AS C ON C.ID = I.CARRIER_ID
+                                    INNER JOIN RR_OPERADORES AS O ON O.ID = I.OPERADOR_ID
+                                    INNER JOIN RR_VENDORS AS V ON V.ID = I.VENDOR_ID
+                                    INNER JOIN RR_RAMPAS AS R ON R.ID = I.RAMPA_ID
+                                    WHERE CAST(I.TS_LOAD AS DATE) BETWEEN CAST(@START AS DATE) AND CAST(@END AS DATE)
+                                    GROUP BY I.OPERADOR_ID, V.VENDOR_CODE, O.[NAME]";
+                Dictionary<string, object> param = new();
+                param.Add("START", data.START_DATE);
+                param.Add("END", data.END_DATE);
+                List<StackedCharts> list = SQLService.SelectMethod<StackedCharts>(query, param: param);
+                List<string?>? labelsTop = list
+                    .GroupBy(x => x.LABELS)
+                    .Select(x => x.Key)
+                    .Distinct()
+                    .ToList();
+                result = new
+                {
+                    Titles = list.Select(x => x.DATA).Distinct().ToList(),
+                    labels = labelsTop,
+                    DataSet = list.GroupBy(x => x.DATA).Select(y => new
+                    {
+                        label = y.Key,
+                        type = "bar",
+                        data =
+                            labelsTop.GroupJoin(y, z => z, w => w.LABELS,
+                            (z, w) => w.FirstOrDefault()?.TOTAL ?? 0)
+                    }).ToList()
+                };
+                return new Models.ReturnableRacksModels.HttpResponse(result, "Ok", false, "GetRacksByVendor");
+            }
+            catch (Exception)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "GetInspectionsByInspector");
+            }
+        }
     }
 }

@@ -396,5 +396,17 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks
                 return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "SaveReport"));
             }
         }
+        [HttpPost]
+        public ActionResult GetInspectionsByInspector(DatesFilter data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetInspectionsByInspector(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "SaveReport"));
+            }
+        }
     }
 }

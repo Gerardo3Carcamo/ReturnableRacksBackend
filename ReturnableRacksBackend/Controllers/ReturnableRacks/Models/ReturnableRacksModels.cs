@@ -94,5 +94,16 @@
             public string? RACK_NAME { get; set; }
             public int COUNT { get; set; }
         }
+        public class DatesFilter
+        {
+            public DateTime? START_DATE { get; set; }
+            public DateTime? END_DATE { get; set; }
+        }
+        public class StackedCharts
+        {
+            public int TOTAL { get; set; }
+            public string? LABELS { get; set; }
+            public string? DATA { get; set; }
+        }
     }
 }

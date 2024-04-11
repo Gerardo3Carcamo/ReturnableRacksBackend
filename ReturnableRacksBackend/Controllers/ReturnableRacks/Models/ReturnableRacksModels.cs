@@ -79,10 +79,15 @@
             public string? SELLO2 { get; set; }
             public int ENTRY_CUBE {  get; set; }
             public int LEAVE_CUBE { get; set; }
+            public DateTime TS_LOAD { get; set; }
             public int CARRIER_ID {  get; set; }
+            public string? CARRIER_CODE { get; set; }
             public string? OPERADOR_ID { get; set; }
+            public string? NAME { get; set; }
             public int VENDOR_ID {  get; set; }
+            public string? VENDOR_CODE { get; set; }
             public int RAMPA_ID { get; set; }
+            public string? RAMP_NUMBER { get; set; }
             public string? MOVEMENT_TYPE { get; set; }
             public string? EXIT_TYPE {  get; set; }
             public List<RacksCargados?>? RACKS {  get; set; }
@@ -104,6 +109,12 @@
             public int TOTAL { get; set; }
             public string? LABELS { get; set; }
             public string? DATA { get; set; }
+        }
+        public class RacksSent
+        {
+            public int TOTAL { get; set; }
+            public string? VENDOR_CODE { get; set; }
+            public DateTime TS_LOAD { get; set; }
         }
     }
 }

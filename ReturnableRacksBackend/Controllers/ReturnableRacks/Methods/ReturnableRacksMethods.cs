@@ -2,6 +2,7 @@
 using ReturnableRacksBackend.Services;
 using System.Data;
 using System.Linq;
+using System.Text;
 using static ReturnableRacksBackend.Controllers.ReturnableRacks.Models.ReturnableRacksModels;
 namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
 {
@@ -18,6 +19,35 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
             else
             {
                 return new ReturnableRacksModels.HttpResponse(new { }, "Credenciales invalidas", true, "Login");
+            }
+        }
+        public static ReturnableRacksModels.HttpResponse InsertUser(Operadores data)
+        {
+            try
+            {
+                string query = $@"INSERT INTO [ReturnableRacks].[dbo].[RR_OPERADORES](NAME, ROLE_ID, AREA_ID, PASSWORD) 
+                                VALUES(@NAME, @ROLE_ID, @AREA_ID, @PASSWORD)";
+                Dictionary<string, object?> param = new();
+                param.Add("NAME", data.OPERADOR_NAME);
+                param.Add("ROLE_ID", data.ROLE_ID);
+                param.Add("AREA_ID", data.AREA_ID);
+                param.Add("PASSWORD", data.PASSWORD);
+                int id = SQLService.InsertMethod(query, param);
+                string update = $@"UPDATE [ReturnableRacks].[dbo].[RR_OPERADORES] SET TOKEN = @TOKEN WHERE ID = @ID";
+                Dictionary<string, object?> updateParam = new();
+                string aux = $"ID:{id}-ROLE:{data.ROLE_ID}-AREA:{data.AREA_ID}-";
+                StringBuilder sb = new();
+                sb.Append(aux);
+                sb.Append(data?.OPERADOR_NAME?.Trim().Replace(" ", "-"));
+                string? token = sb.ToString();
+                updateParam.Add("TOKEN", token);
+                updateParam.Add("ID", id);
+                SQLService.UpdateMethod(update, updateParam);
+                return new Models.ReturnableRacksModels.HttpResponse(true, "Ok", false, "InsertUser");
+            }
+            catch(Exception ex)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, ex.Message, true, "InsertUser");
             }
         }
         public static Models.ReturnableRacksModels.HttpResponse AddRoles(Roles data)
@@ -378,11 +408,12 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
                 var id = SQLService.InsertMethod(query, param); 
                 data.RACKS.ForEach(x =>
                 {
-                    Dictionary<string, object> param2 = new();
+                    Dictionary<string, object?>? param2 = new();
                     string query2 = $@"INSERT INTO [ReturnableRacks].[dbo].[RR_RACKS_INSPECTIONS]
-                                        VALUES(@INSPECTION_ID, @RACK_ID)";
+                                        VALUES(@INSPECTION_ID, @RACK_ID, @COUNT)";
                     param2.Add("INSPECTION_ID", id);
                     param2.Add("RACK_ID", x?.RACK_ID);
+                    param2.Add("COUNT", x?.COUNT);
                     SQLService.InsertMethod(query2, param2);
                 });
                 return new Models.ReturnableRacksModels.HttpResponse(true, "Ok", false, "GetRacksByVendor");
@@ -406,7 +437,7 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
                                     INNER JOIN RR_RAMPAS AS R ON R.ID = I.RAMPA_ID
                                     WHERE CAST(I.TS_LOAD AS DATE) BETWEEN CAST(@START AS DATE) AND CAST(@END AS DATE)
                                     GROUP BY I.OPERADOR_ID, V.VENDOR_CODE, O.[NAME]";
-                Dictionary<string, object> param = new();
+                Dictionary<string, object?>? param = new();
                 param.Add("START", data.START_DATE);
                 param.Add("END", data.END_DATE);
                 List<StackedCharts> list = SQLService.SelectMethod<StackedCharts>(query, param: param);
@@ -434,6 +465,133 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks.Methods
             {
                 return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "GetInspectionsByInspector");
             }
+        }
+
+        public static ReturnableRacksModels.HttpResponse GetCountInspectionsByTypeAndVendor(DatesFilter data)
+        {
+            try
+            {
+                string query = $@"SELECT 
+                                CASE 
+	                                WHEN MOVEMENT_TYPE = 'Auditoria' THEN 'Buenos'
+	                                WHEN MOVEMENT_TYPE = 'Carga' or MOVEMENT_TYPE = 'Reauditoria' THEN 'Desperdicio'
+	                                WHEN MOVEMENT_TYPE = 'Reportar caja dañada' THEN 'Malos'
+                                END AS [DATA],
+                                COUNT(I.ID) AS [TOTAL],
+                                v.VENDOR_CODE AS LABELS
+                                FROM RR_INSPECTIONS AS I
+                                INNER JOIN RR_VENDORS AS V ON
+                                V.ID = I.VENDOR_ID
+                                WHERE I.TS_LOAD BETWEEN @START AND @END
+                                GROUP BY 
+                                CASE 
+	                                WHEN MOVEMENT_TYPE = 'Auditoria' THEN 'Buenos'
+	                                WHEN MOVEMENT_TYPE = 'Carga' or MOVEMENT_TYPE = 'Reauditoria' THEN 'Desperdicio'
+	                                WHEN MOVEMENT_TYPE = 'Reportar caja dañada' THEN 'Malos'
+                                END, v.VENDOR_CODE";
+                Dictionary<string, object?>? param = new();
+                param.Add("START", data.START_DATE);
+                param.Add("END", data.END_DATE);
+                List<StackedCharts> list = SQLService.SelectMethod<StackedCharts>(query, param: param);
+                List<string?>? labelsTop = list
+                    .GroupBy(x => x.LABELS)
+                    .Select(x => x.Key)
+                    .Distinct()
+                    .ToList();
+                object result = new
+                {
+                    labels = labelsTop,
+                    DataSet = list.GroupBy(x => x.DATA).Select(y => new
+                    {
+                        label = y.Key,
+                        type = "bar",
+                        data = labelsTop.GroupJoin(y, z => z, w => w.LABELS, (z, w) => w.FirstOrDefault()?.TOTAL ?? 0)
+                    })
+                };
+                return new Models.ReturnableRacksModels.HttpResponse(result, "Ok", false, "GetCountInspectionsByTypeAndVendor");
+            }
+            catch (Exception ex)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "GetInspectionsByInspector");
+            }
+        }
+
+        public static ReturnableRacksModels.HttpResponse GetCountRacksSentByVendor(DatesFilter data)
+        {
+            try
+            {
+                string query = $@"SELECT SUM(RI.QUANTITY) AS [TOTAL], V.VENDOR_CODE AS [DATA], R.RACK_NAME AS LABELS FROM RR_RACKS AS R
+                                    INNER JOIN RR_VENDORS AS V ON
+                                    R.VENDOR_ID = V.ID
+                                    INNER JOIN RR_RACKS_INSPECTIONS AS RI ON
+                                    RI.RACK_ID = R.ID
+                                    INNER JOIN RR_INSPECTIONS AS I ON 
+                                    I.ID = RI.INSPECTION_ID
+                                    WHERE I.TS_LOAD BETWEEN @START AND @END
+                                    GROUP BY V.VENDOR_CODE, R.RACK_NAME";
+                Dictionary<string, object?>? param = new();
+                param.Add("START", data.START_DATE);
+                param.Add("END", data.END_DATE);
+                List<StackedCharts> list = SQLService.SelectMethod<StackedCharts>(query, param: param);
+                List<string?>? labelsTop = list
+                    .GroupBy(x => x.LABELS)
+                    .Select(x => x.Key)
+                    .Distinct()
+                    .ToList();
+                object result = new
+                {
+                    labels = labelsTop,
+                    DataSet = list.GroupBy(x => x.DATA).Select(y => new
+                    {
+                        label = y.Key,
+                        type = "bar",
+                        data = labelsTop.GroupJoin(y, z => z, w => w.LABELS, (z, w) => w.FirstOrDefault()?.TOTAL ?? 0)
+                    })
+                };
+                return new Models.ReturnableRacksModels.HttpResponse(result, "Ok", false, "GetCountInspectionsByTypeAndVendor");
+            }
+            catch (Exception ex)
+            {
+                return new Models.ReturnableRacksModels.HttpResponse(new { }, "Error", true, "GetInspectionsByInspector");
+            }
+        }
+        public static ReturnableRacksModels.HttpResponse GetReportOfInspections(DatesFilter data)
+        {
+            string query = $@"SELECT I.ID, I.FOLIO, I.SELLO1, I.SELLO2, I.ENTRY_CUBE, I.LEAVE_CUBE, I.TS_LOAD,
+                                C.CARRIER_CODE, O.[NAME], V.VENDOR_CODE, R.RAMP_NUMBER, I.MOVEMENT_TYPE, I.EXIT_TYPE
+                                FROM RR_INSPECTIONS AS I
+                                INNER JOIN RR_CARRIERS AS C ON
+                                C.ID = I.CARRIER_ID
+                                INNER JOIN RR_OPERADORES AS O ON
+                                O.ID = I.OPERADOR_ID
+                                INNER JOIN RR_VENDORS AS V ON
+                                V.ID = I.VENDOR_ID
+                                INNER JOIN RR_RAMPAS AS R ON
+                                R.ID = I.RAMPA_ID
+                                WHERE I.TS_LOAD BETWEEN @START AND @END";
+            Dictionary<string, object?>? param = new();
+            param.Add("START", data.START_DATE);
+            param.Add("END", data.END_DATE);
+            List<Inspecciones> list = SQLService.SelectMethod<Inspecciones>(query, param: param);
+            return new Models.ReturnableRacksModels.HttpResponse(list, "Ok", false, "GetReportOfInspections");
+        }
+        public static ReturnableRacksModels.HttpResponse GetReportOfRacksSent(DatesFilter data)
+        {
+            string query = $@"select SUM(RI.QUANTITY) AS TOTAL, V.VENDOR_CODE, 
+                                CAST(I.TS_LOAD AS DATE) AS TS_LOAD
+                                from RR_RACKS_INSPECTIONS AS RI
+                                INNER JOIN RR_INSPECTIONS AS I
+                                ON I.ID = RI.INSPECTION_ID
+                                INNER JOIN RR_VENDORS AS V 
+                                ON V.ID = I.VENDOR_ID
+                                WHERE I.TS_LOAD BETWEEN @START AND @END
+                                GROUP BY V.VENDOR_CODE, CAST(I.TS_LOAD AS DATE)
+                                ORDER BY CAST(I.TS_LOAD AS DATE)";
+            Dictionary<string, object?>? param = new();
+            param.Add("START", data.START_DATE);
+            param.Add("END", data.END_DATE);
+            List<RacksSent> list = SQLService.SelectMethod<RacksSent>(query, param: param);
+            return new Models.ReturnableRacksModels.HttpResponse(list, "Ok", false, "GetReportOfRacksSent");
         }
     }
 }

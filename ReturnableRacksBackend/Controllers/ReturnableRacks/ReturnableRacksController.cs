@@ -408,5 +408,66 @@ namespace ReturnableRacksBackend.Controllers.ReturnableRacks
                 return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "SaveReport"));
             }
         }
+
+        [HttpPost]
+        public ActionResult InsertUser(Operadores data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.InsertUser(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "SaveReport"));
+            }
+        }
+        [HttpPost]
+        public ActionResult GetCountInspectionsByTypeAndVendor(DatesFilter data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetCountInspectionsByTypeAndVendor(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetCountInspectionsByTypeAndVendor"));
+            }
+        }
+        [HttpPost]
+        public ActionResult GetCountRacksSentByVendor(DatesFilter data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetCountRacksSentByVendor(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetCountRacksSentByVendor"));
+            }
+        }
+        [HttpPost]
+        public ActionResult GetReportOfInspections(DatesFilter data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetReportOfInspections(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetCountRacksSentByVendor"));
+            }
+        }
+        [HttpPost]
+        public ActionResult GetReportOfRacksSent(DatesFilter data)
+        {
+            try
+            {
+                return Ok(ReturnableRacksMethods.GetReportOfRacksSent(data));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new ReturnableRacksModels.HttpResponse(null, ex.Message, true, "GetReportOfRacksSent"));
+            }
+        }
     }
 }
